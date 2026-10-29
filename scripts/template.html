@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>AI Stock Atlas — the worldwide AI industry, mapped</title>
+<meta name="description" content="Every major listed AI company worldwide on one live map: ~360 stocks across 13 layers of the AI supply chain, from chip tools to robots. Prices refresh hourly.">
+<meta property="og:type" content="website">
+<meta property="og:title" content="AI Stock Atlas — the worldwide AI industry, mapped">
+<meta property="og:description" content="~360 listed AI companies, 20 countries, 13 layers of the AI supply chain. Live market map, value chain, world view and IPO pipeline.">
+<meta property="og:url" content="https://luckeyfaraday.github.io/ai-stock-atlas/">
+<meta property="og:image" content="https://luckeyfaraday.github.io/ai-stock-atlas/og.png">
+<meta property="og:image:width" content="1200"><meta property="og:image:height" content="630">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="AI Stock Atlas — the worldwide AI industry, mapped">
+<meta name="twitter:description" content="~360 listed AI companies, 20 countries, 13 layers of the AI supply chain. Live market map, refreshed hourly.">
+<meta name="twitter:image" content="https://luckeyfaraday.github.io/ai-stock-atlas/og.png">
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='6' fill='%230d0d0d'/%3E%3Crect x='4' y='4' width='14' height='24' rx='2' fill='%232a78d6'/%3E%3Crect x='20' y='4' width='8' height='11' rx='2' fill='%23c93c3a'/%3E%3Crect x='20' y='17' width='8' height='11' rx='2' fill='%231c5cab'/%3E%3C/svg%3E">
+<style>
+.viz-root {
+  color-scheme: light;
+  --page: #f9f9f7; --surface: #fcfcfb; --ink: #0b0b0b; --ink2: #52514e; --muted: #898781;
+  --grid: #e1e0d9; --axis: #c3c2b7; --border: rgba(11,11,11,0.10); --land: #e6e5df;
+  --mid: #dddcd5; --up: #1c5cab; --down: #b8302f; --na: #c9c8c1; --good: #006300;
+  --s1: #2a78d6; --s2: #eb6834; --s3: #1baf7a; --s4: #eda100; --s5: #e87ba4; --s6: #008300; --s7: #6250d6;
+}
+@media (prefers-color-scheme: dark) {
+  :root:where(:not([data-theme="light"])) .viz-root {
+    color-scheme: dark;
+    --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+    --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --land: #2a2a28;
+    --mid: #3a3a37; --up: #2a78d6; --down: #c93c3a; --na: #2c2c2a; --good: #0ca30c;
+    --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9;
+  }
+}
+:root[data-theme="dark"] .viz-root {
+  color-scheme: dark;
+  --page: #0d0d0d; --surface: #1a1a19; --ink: #f0efec; --ink2: #c3c2b7; --muted: #898781;
+  --grid: #2c2c2a; --axis: #383835; --border: rgba(255,255,255,0.10); --land: #2a2a28;
+  --mid: #3a3a37; --up: #2a78d6; --down: #c93c3a; --na: #2c2c2a; --good: #0ca30c;
+  --s1: #3987e5; --s2: #d95926; --s3: #199e70; --s4: #c98500; --s5: #d55181; --s6: #008300; --s7: #9085e9;
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; }
+body { overflow-x: clip; }
+body { font-family: system-ui, -apple-system, "Segoe UI", sans-serif; }
+.viz-root { background: var(--page); color: var(--ink); min-height: 100vh; font-size: 14px; line-height: 1.4; }
+.wrap { max-width: 1680px; margin: 0 auto; padding: 0 20px; }
+a { color: var(--s1); }
+header.top { padding: 18px 0 10px; display: flex; gap: 24px; align-items: flex-end; flex-wrap: wrap; justify-content: space-between; }
+h1 { font-size: 22px; margin: 0; letter-spacing: -0.01em; }
+.sub { color: var(--ink2); margin-top: 3px; font-size: 13px; }
+.tiles { display: flex; gap: 10px; flex-wrap: wrap; }
+.tile-stat { background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: 8px 14px; min-width: 132px; }
+.tile-stat .k { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; }
+.tile-stat .v { font-size: 22px; font-weight: 650; margin-top: 1px; }
+.tile-stat .d { font-size: 12px; color: var(--ink2); }
+.filters { position: sticky; top: 0; z-index: 20; background: var(--page); border-bottom: 1px solid var(--grid); padding: 8px 0; }
+.filters .row { display: flex; gap: 14px; align-items: center; flex-wrap: wrap; }
+.seg { display: inline-flex; border: 1px solid var(--axis); border-radius: 7px; overflow: hidden; }
+.seg button { border: 0; background: transparent; color: var(--ink2); padding: 5px 10px; font: inherit; font-size: 13px; cursor: pointer; }
+.seg button + button { border-left: 1px solid var(--grid); }
+.seg button[aria-pressed="true"] { background: var(--ink); color: var(--page); font-weight: 600; }
+.seg button:hover:not([aria-pressed="true"]) { background: var(--grid); }
+.lbl { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: .04em; margin-right: -6px; }
+input[type="search"] { font: inherit; font-size: 13px; padding: 5px 10px; border: 1px solid var(--axis); border-radius: 7px; background: var(--surface); color: var(--ink); width: 210px; }
+.chips { display: flex; gap: 6px; flex-wrap: wrap; }
+.chip { display: inline-flex; gap: 6px; align-items: center; border: 1px solid var(--axis); border-radius: 999px; padding: 2px 4px 2px 10px; font-size: 12px; background: var(--surface); }
+.chip button { border: 0; background: var(--grid); color: var(--ink); border-radius: 999px; width: 18px; height: 18px; cursor: pointer; line-height: 1; }
+.iconbtn { border: 1px solid var(--axis); background: var(--surface); color: var(--ink2); border-radius: 7px; padding: 5px 9px; font: inherit; font-size: 13px; cursor: pointer; margin-left: auto; }
+nav.tabs { display: flex; gap: 2px; margin: 12px 0 10px; border-bottom: 1px solid var(--grid); overflow-x: auto; }
+nav.tabs button { border: 0; background: none; color: var(--ink2); font: inherit; font-size: 14px; padding: 8px 14px; cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; white-space: nowrap; }
+nav.tabs button[aria-selected="true"] { color: var(--ink); border-bottom-color: var(--ink); font-weight: 600; }
+section.view { display: none; padding-bottom: 40px; }
+section.view.on { display: block; }
+.toolbar { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 8px; font-size: 13px; color: var(--ink2); }
+.legend { display: inline-flex; align-items: center; gap: 8px; font-size: 12px; color: var(--ink2); }
+.legend .ramp { width: 180px; height: 10px; border-radius: 3px; }
+.legend .sw { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+.legend .item { display: inline-flex; gap: 5px; align-items: center; }
+.card { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+#treemap { background: var(--surface); border-radius: 10px; border: 1px solid var(--border); overflow: hidden; }
+#treemap svg { display: block; }
+.grp-bg { fill: var(--surface); }
+.grp-label { fill: var(--ink2); font-size: 10.5px; font-weight: 650; letter-spacing: .05em; cursor: pointer; }
+.grp-label:hover { fill: var(--ink); text-decoration: underline; }
+.tile { cursor: pointer; }
+.tile text { pointer-events: none; font-weight: 650; }
+.tile text.ret { font-weight: 500; }
+.empty { padding: 40px; color: var(--muted); text-align: center; }
+#tip { position: fixed; pointer-events: none; z-index: 50; background: var(--surface); color: var(--ink); border: 1px solid var(--border); border-radius: 8px; padding: 10px 12px; font-size: 12.5px; box-shadow: 0 6px 24px rgba(0,0,0,.18); max-width: 330px; display: none; }
+#tip b { font-size: 14px; }
+#tip .m { color: var(--ink2); }
+#tip .rets { display: grid; grid-template-columns: repeat(5, auto); gap: 0 10px; margin-top: 6px; font-variant-numeric: tabular-nums; }
+#tip .rets span:nth-child(-n+5) { color: var(--muted); font-size: 11px; }
+.chain { display: grid; grid-template-columns: repeat(auto-fill, minmax(330px, 1fr)); gap: 12px; }
+.chain .card { padding: 14px 16px; display: flex; flex-direction: column; gap: 8px; }
+.chain .hd { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
+.chain .num { font-size: 11px; color: var(--muted); font-weight: 650; letter-spacing: .06em; }
+.chain h3 { margin: 0; font-size: 15px; cursor: pointer; }
+.chain h3:hover { text-decoration: underline; }
+.chain .desc { font-size: 12px; color: var(--ink2); margin-top: -4px; }
+.chain .big { font-size: 22px; font-weight: 650; }
+.chain .meta { font-size: 12px; color: var(--ink2); }
+.rbar { display: flex; gap: 2px; height: 10px; }
+.rbar div { height: 100%; }
+.rbar div:first-child { border-radius: 3px 0 0 3px; }
+.rbar div:last-child { border-radius: 0 3px 3px 0; }
+.rbar div:only-child { border-radius: 3px; }
+.top5 { display: grid; grid-template-columns: 1fr auto auto; gap: 2px 12px; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+.top5 .n { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; cursor: pointer; }
+.top5 .n:hover { text-decoration: underline; }
+.top5 .c { color: var(--ink2); text-align: right; }
+.world { display: grid; grid-template-columns: minmax(0, 2.1fr) minmax(300px, 1fr); gap: 12px; }
+@media (max-width: 980px) { .world { grid-template-columns: 1fr; } }
+#worldmap { padding: 6px; }
+#worldmap svg { display: block; }
+.land { fill: var(--land); stroke: var(--surface); stroke-width: .6; }
+.bub { cursor: pointer; }
+.bub-label { font-size: 11px; font-weight: 650; fill: var(--ink); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; pointer-events: none; }
+.bub-sub { font-size: 10.5px; fill: var(--ink2); paint-order: stroke; stroke: var(--surface); stroke-width: 3px; pointer-events: none; }
+.rank { padding: 12px 14px; }
+.rank h3, .panel h3 { margin: 0 0 8px; font-size: 14px; }
+.rank .r { display: grid; grid-template-columns: 112px 1fr 64px 52px; gap: 8px; align-items: center; font-size: 12.5px; padding: 3px 4px; border-radius: 5px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.rank .r:hover, .rank .r.sel { background: var(--grid); }
+.rank .bar { height: 8px; background: var(--s1); border-radius: 0 3px 3px 0; min-width: 2px; }
+.rank .v { text-align: right; }
+.rank .c { text-align: right; color: var(--ink2); }
+.panels { display: grid; grid-template-columns: repeat(auto-fit, minmax(440px, 1fr)); gap: 12px; margin-top: 12px; }
+.panel { padding: 14px 16px; }
+.panel .note { font-size: 12px; color: var(--ink2); margin: -2px 0 10px; }
+table.t { width: 100%; border-collapse: collapse; font-size: 12.5px; font-variant-numeric: tabular-nums; }
+table.t th { text-align: left; font-weight: 600; color: var(--ink2); font-size: 11.5px; padding: 7px 8px; border-bottom: 1px solid var(--axis); background: var(--surface); white-space: nowrap; user-select: none; }
+#table th { position: sticky; top: var(--fh, 50px); cursor: pointer; z-index: 2; }
+table.t th.num, table.t td.num { text-align: right; }
+table.t td { padding: 5px 8px; border-bottom: 1px solid var(--grid); white-space: nowrap; }
+table.t tr.row { cursor: pointer; }
+table.t tr.row:hover td { background: var(--grid); }
+table.t td.wrapc { white-space: normal; min-width: 220px; color: var(--ink2); }
+.mk { display: inline-block; width: 8px; height: 8px; border-radius: 2px; margin-right: 5px; vertical-align: 0; }
+.tbl-wrap { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; }
+@media (max-width: 1100px) { .tbl-wrap { overflow-x: auto; } #table th { top: 0; } }
+@media (max-width: 760px) { .filters { position: static; } .seg { max-width: 100%; overflow-x: auto; } .seg button { flex: none; white-space: nowrap; } .legend { flex-wrap: wrap; } .legend .ramp { width: 120px; } input[type="search"] { width: 100%; } .wrap { padding: 0 12px; } h1 { font-size: 20px; } .tile-stat { min-width: 0; flex: 1; } }
+.tag { display: inline-block; font-size: 10.5px; padding: 0 6px; border-radius: 999px; border: 1px solid var(--axis); color: var(--ink2); }
+#drawer { position: fixed; right: 0; top: 0; bottom: 0; width: 380px; max-width: 100vw; background: var(--surface); border-left: 1px solid var(--border); box-shadow: -10px 0 30px rgba(0,0,0,.15); z-index: 40; transform: translateX(105%); transition: transform .18s ease; overflow-y: auto; padding: 18px 20px 30px; }
+#drawer.open { transform: none; }
+#drawer .x { position: absolute; right: 12px; top: 10px; border: 0; background: var(--grid); color: var(--ink); width: 28px; height: 28px; border-radius: 50%; cursor: pointer; font-size: 15px; }
+#drawer h2 { margin: 0 34px 2px 0; font-size: 19px; }
+#drawer .m { color: var(--ink2); font-size: 13px; }
+#drawer .kv { display: grid; grid-template-columns: auto 1fr; gap: 4px 14px; font-size: 13px; margin: 12px 0; font-variant-numeric: tabular-nums; }
+#drawer .kv span:nth-child(odd) { color: var(--muted); }
+#drawer .rets { display: grid; grid-template-columns: repeat(5, 1fr); text-align: center; border: 1px solid var(--grid); border-radius: 8px; padding: 8px 0; font-variant-numeric: tabular-nums; }
+#drawer .rets .k { font-size: 11px; color: var(--muted); }
+#drawer .rets .v { font-weight: 650; }
+.spark-wrap { margin: 14px 0 4px; }
+.spark-read { font-size: 12px; color: var(--ink2); height: 16px; font-variant-numeric: tabular-nums; }
+.about { max-width: 860px; font-size: 14px; color: var(--ink); }
+.about h3 { margin: 22px 0 6px; font-size: 15px; }
+.about p, .about li { color: var(--ink2); }
+footer { color: var(--muted); font-size: 12px; padding: 20px 0 30px; border-top: 1px solid var(--grid); }
+:focus-visible { outline: 2px solid var(--s1); outline-offset: 2px; }
+@media (forced-colors: active) { .rbar div, .rank .bar { forced-color-adjust: none; } }
+</style>
+</head>
+<body>
+<div class="viz-root">
+  <div class="wrap">
+    <header class="top">
+      <div>
+        <h1>AI Stock Atlas</h1>
+        <div class="sub" id="subtitle"></div>
+      </div>
+      <div class="tiles" id="tiles"></div>
+    </header>
+  </div>
+  <div class="filters">
+    <div class="wrap">
+      <div class="row">
+        <input type="search" id="q" placeholder="Search company, ticker, segment…" aria-label="Search companies">
+        <span class="lbl">Period</span><div class="seg" id="f-period" role="group" aria-label="Return period"></div>
+        <span class="lbl">Region</span><div class="seg" id="f-region" role="group" aria-label="Region"></div>
+        <span class="lbl">AI exposure</span><div class="seg" id="f-tier" role="group" aria-label="AI exposure tier"></div>
+        <div class="chips" id="chips"></div>
+        <button class="iconbtn" id="theme" title="Switch light/dark">Theme: auto</button>
+      </div>
+    </div>
+  </div>
+  <div class="wrap">
+    <nav class="tabs" role="tablist" id="tabs"></nav>
+    <main>
+      <section class="view" id="v-map">
+        <div class="toolbar">
+          <span class="legend" id="map-legend"></span>
+          <span class="lbl" style="margin-left:auto">Tile size</span>
+          <div class="seg" id="f-size" role="group" aria-label="Tile size"></div>
+        </div>
+        <div id="treemap"></div>
+        <div class="toolbar" style="margin-top:8px">Tiles are sized by market cap (USD) and grouped by value-chain layer, upstream to downstream. Click a layer title to zoom in and a tile for details. The Table tab lists every value.</div>
+      </section>
+      <section class="view" id="v-chain">
+        <div class="toolbar"><span class="legend" id="chain-legend"></span></div>
+        <div class="chain" id="chain"></div>
+      </section>
+      <section class="view" id="v-world">
+        <div class="world">
+          <div class="card" id="worldmap"></div>
+          <div class="card rank" id="rank"></div>
+        </div>
+      </section>
+      <section class="view" id="v-ipo">
+        <div id="ipo"></div>
+      </section>
+      <section class="view" id="v-table">
+        <div class="tbl-wrap"><table class="t" id="table"></table></div>
+      </section>
+      <section class="view" id="v-about">
+        <div class="about" id="about"></div>
+      </section>
+    </main>
+    <footer id="foot"></footer>
+  </div>
+  <aside id="drawer" aria-label="Company details"></aside>
+  <div id="tip" role="tooltip"></div>
+</div>
+<script>/*__D3__*/</script>
+<script>/*__TOPOJSON__*/</script>
+<script>const WORLD = /*__WORLD__*/;
+const DATA = /*__DATA__*/;</script>
+<script>
+"use strict";
+const $ = s => document.querySelector(s);
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+
+const REGIONS = [
+  {id: "us", name: "United States", slot: 1}, {id: "cn", name: "China & HK", slot: 2},
+  {id: "tw", name: "Taiwan", slot: 3}, {id: "jp", name: "Japan", slot: 4},
+  {id: "kr", name: "South Korea", slot: 5}, {id: "eu", name: "Europe", slot: 6},
+  {id: "row", name: "Rest of world", slot: 7},
+];
+const REGION = Object.fromEntries(REGIONS.map(r => [r.id, r]));
+const PERIODS = [["1d", "1D"], ["1w", "1W"], ["1m", "1M"], ["ytd", "YTD"], ["1y", "1Y"]];
+const PERIOD_NAME = {"1d": "1 day", "1w": "1 week", "1m": "1 month", ytd: "year to date", "1y": "1 year"};
+const DOMAIN = {"1d": 5, "1w": 10, "1m": 20, ytd: 80, "1y": 100};
+const TIER_NAME = {core: "Core", high: "High", partial: "Partial"};
+const VIEWS = [["map", "Map"], ["chain", "Value chain"], ["world", "World"], 
+               ["ipo", "New & upcoming listings"], ["table", "Table"], ["about", "Method"]];
+
+const C = DATA.companies;
+const LAYER = Object.fromEntries(DATA.layers.map((l, i) => [l.id, {...l, i}]));
+C.forEach(d => { d.reg = DATA.countries[d.c].region; d.cn = DATA.countries[d.c].name; });
+const BY_T = Object.fromEntries(C.map(d => [d.t, d]));
+
+const state = {view: "map", period: "ytd", region: "all", tier: "all", q: "",
+               size: "cap", layer: null, country: null, sort: {k: "mc", d: -1}};
+const hv = location.hash.slice(1);
+if (VIEWS.some(v => v[0] === hv)) state.view = hv;
+
+// ---------- helpers ----------
+let TH = {};
+function readTheme() {
+  const cs = getComputedStyle($(".viz-root"));
+  for (const k of ["mid","up","down","na","ink","ink2","muted","surface","land","grid","axis","page","s1","s2","s3","s4","s5","s6","s7"])
+    TH[k] = cs.getPropertyValue("--" + k).trim();
+}
+const fmtCap = v => v == null ? "—" : v >= 1e12 ? `$${(v / 1e12).toFixed(v >= 1e13 ? 1 : 2)}T`
+  : v >= 1e9 ? `$${(v / 1e9).toFixed(v >= 1e11 ? 0 : 1)}B` : `$${(v / 1e6).toFixed(0)}M`;
+const fmtPct = r => r == null ? "—" : `${r > 0 ? "+" : r < 0 ? "−" : ""}${Math.abs(r).toFixed(Math.abs(r) >= 100 ? 0 : 1)}%`;
+const arrow = r => r == null ? "" : r > 0 ? "▲ " : r < 0 ? "▼ " : "";
+function retColor(r) {
+  if (r == null) return TH.na;
+  const t = Math.max(-1, Math.min(1, r / DOMAIN[state.period]));
+  return d3.interpolateLab(TH.mid, t >= 0 ? TH.up : TH.down)(Math.pow(Math.abs(t), 0.75));
+}
+const textOn = fill => d3.lab(fill).l > 60 ? "#0b0b0b" : "#ffffff";
+function capRet(list, p) {
+  let now = 0, then = 0;
+  for (const d of list) { const r = d.r[p]; if (r == null || !d.mc) continue; now += d.mc; then += d.mc / (1 + r / 100); }
+  return then ? (now / then - 1) * 100 : null;
+}
+function matches(d, ignore = {}) {
+  if (!ignore.region && state.region !== "all" && d.reg !== state.region) return false;
+  if (!ignore.country && state.country && d.c !== state.country) return false;
+  if (!ignore.layer && state.layer && d.l !== state.layer) return false;
+  if (state.tier === "corehigh" && d.tier === "partial") return false;
+  if (state.tier === "core" && d.tier !== "core") return false;
+  if (state.q) {
+    const hay = `${d.n} ${d.t} ${d.lab} ${d.s} ${d.note} ${d.cn} ${LAYER[d.l].name}`.toLowerCase();
+    if (!state.q.toLowerCase().split(/\s+/).every(w => hay.includes(w))) return false;
+  }
+  return true;
+}
+const filtered = ignore => C.filter(d => matches(d, ignore));
+function fitText(s, maxW, fs) {
+  const per = fs * 0.6;
+  if (s.length * per <= maxW) return s;
+  const n = Math.floor(maxW / per) - 1;
+  return n > 2 ? s.slice(0, n) + "…" : "";
+}
+
+// ---------- tooltip ----------
+const tip = $("#tip");
+function showTip(e, html) { tip.innerHTML = html; tip.style.display = "block"; moveTip(e); }
+function moveTip(e) {
+  const pad = 14, w = tip.offsetWidth, h = tip.offsetHeight;
+  let x = e.clientX + pad, y = e.clientY + pad;
+  if (x + w > innerWidth - 8) x = e.clientX - w - pad;
+  if (y + h > innerHeight - 8) y = Math.max(8, e.clientY - h - pad);
+  tip.style.left = x + "px"; tip.style.top = y + "px";
+}
+const hideTip = () => { tip.style.display = "none"; };
+function companyTip(d) {
+  const r = d.r;
+  return `<b>${esc(d.n)}</b> <span class="m">${esc(d.t)} · ${esc(d.cn)}</span><br>
+  <span class="m">${esc(LAYER[d.l].name)} › ${esc(d.s)} · ${TIER_NAME[d.tier]} AI exposure</span><br>
+  Mkt cap <b>${fmtCap(d.mc)}</b>${d.ipo ? ` · <span class="m">trading since ${d.ipo}</span>` : ""}
+  <div class="rets">${PERIODS.map(p => `<span>${p[1]}</span>`).join("")}${PERIODS.map(p => `<span>${fmtPct(r[p[0]])}</span>`).join("")}</div>
+  <div class="m" style="margin-top:6px">${esc(d.note)}</div>`;
+}
+
+// ---------- header, filters, tabs ----------
+function seg(el, opts, cur, on) {
+  el.innerHTML = opts.map(([v, l]) => `<button data-v="${v}" aria-pressed="${v === cur}">${l}</button>`).join("");
+  el.onclick = e => { const b = e.target.closest("button"); if (b) on(b.dataset.v); };
+}
+function renderControls() {
+  seg($("#f-period"), PERIODS, state.period, v => { state.period = v; renderAll(); });
+  seg($("#f-region"), [["all", "All"], ...REGIONS.map(r => [r.id, r.name.replace("United States", "US").replace("South Korea", "Korea").replace("Rest of world", "Other")])],
+      state.region, v => { state.region = v; state.country = null; renderAll(); });
+  seg($("#f-tier"), [["all", "All"], ["corehigh", "Core + high"], ["core", "Core only"]], state.tier, v => { state.tier = v; renderAll(); });
+  seg($("#f-size"), [["cap", "Market cap"], ["sqrt", "√ Market cap (small caps visible)"]], state.size, v => { state.size = v; renderAll(); });
+  const chips = [];
+  if (state.layer) chips.push(["layer", `Layer: ${LAYER[state.layer].name}`]);
+  if (state.country) chips.push(["country", `Country: ${DATA.countries[state.country].name}`]);
+  $("#chips").innerHTML = chips.map(([k, l]) => `<span class="chip">${esc(l)}<button data-k="${k}" aria-label="Clear ${esc(l)}">×</button></span>`).join("");
+  $("#tabs").innerHTML = VIEWS.map(([v, l]) => `<button role="tab" data-v="${v}" aria-selected="${v === state.view}">${l}</button>`).join("");
+  document.querySelectorAll("section.view").forEach(s => s.classList.toggle("on", s.id === "v-" + state.view));
+}
+$("#chips").onclick = e => { const b = e.target.closest("button"); if (!b) return; state[b.dataset.k] = null; renderAll(); };
+$("#tabs").onclick = e => { const b = e.target.closest("button"); if (!b) return; state.view = b.dataset.v; history.replaceState(null, "", "#" + state.view); renderAll(); window.scrollTo({top: 0}); };
+let qTimer; $("#q").oninput = e => { clearTimeout(qTimer); qTimer = setTimeout(() => { state.q = e.target.value.trim(); renderAll(); }, 120); };
+const setLayer = id => { state.layer = state.layer === id ? null : id; if (state.view !== "map" && state.view !== "table") state.view = "map"; renderAll(); };
+const setCountry = c => { state.country = state.country === c ? null : c; renderAll(); };
+
+const THEMES = ["auto", "dark", "light"];
+let theme = localStorage.getItem("aiatlas-theme") || "auto";
+function applyTheme() {
+  if (theme === "auto") document.documentElement.removeAttribute("data-theme");
+  else document.documentElement.setAttribute("data-theme", theme);
+  $("#theme").textContent = "Theme: " + theme;
+  readTheme();
+}
+$("#theme").onclick = () => { theme = THEMES[(THEMES.indexOf(theme) + 1) % 3]; localStorage.setItem("aiatlas-theme", theme); applyTheme(); renderAll(); };
+matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => { readTheme(); renderAll(); });
+
+function renderHeader() {
+  const list = filtered();
+  const tot = d3.sum(list, d => d.mc);
+  const countries = new Set(list.map(d => d.c)).size;
+  const p = state.period, pl = PERIODS.find(x => x[0] === p)[1];
+  const cr = capRet(list, p);
+  const up = list.filter(d => d.r[p] > 0).length, down = list.filter(d => d.r[p] < 0).length;
+  $("#subtitle").innerHTML = `${C.length} listed companies across the AI value chain in ${new Set(C.map(d => d.c)).size} countries · prices as of ${esc(DATA.asof.replace("T", " ").replace("Z", " UTC"))}`;
+  $("#tiles").innerHTML = `
+    <div class="tile-stat"><div class="k">Market cap${list.length < C.length ? " (filtered)" : ""}</div><div class="v">${fmtCap(tot)}</div><div class="d">${list.length} companies · ${countries} countries</div></div>
+    <div class="tile-stat"><div class="k">Cap-weighted ${pl}</div><div class="v">${arrow(cr)}${fmtPct(cr)}</div><div class="d">${list.length < C.length ? "filtered set" : "whole universe"}</div></div>
+    <div class="tile-stat"><div class="k">Breadth ${pl}</div><div class="v">${up} ▲ ${down} ▼</div><div class="d">companies up vs down</div></div>`;
+  $("#foot").innerHTML = `Data: ${esc(DATA.source)}, ${esc(DATA.asof)}. Market caps converted to USD at spot FX. Universe and AI-exposure tiers are editorial. Not investment advice.`;
+}
+
+// ---------- MAP (treemap) ----------
+function legendRamp() {
+  const m = DOMAIN[state.period];
+  const stops = d3.range(0, 1.0001, 0.1).map(t => retColor(-m + 2 * m * t));
+  return `<span class="item">${fmtPct(-m)}</span><span class="ramp" style="background:linear-gradient(90deg,${stops.join(",")})"></span><span class="item">${fmtPct(m)}</span>
+    <span class="item"><span class="sw" style="background:${TH.na}"></span>no history</span>
+    <span class="item" style="color:var(--muted)">${PERIOD_NAME[state.period]} return, clamped at ±${m}%</span>`;
+}
+function renderMap() {
+  $("#map-legend").innerHTML = legendRamp();
+  const host = $("#treemap"); host.innerHTML = "";
+  const list = filtered();
+  if (!list.length) { host.innerHTML = `<p class="empty">No companies match these filters.</p>`; return; }
+  const W = host.clientWidth, H = W < 700 ? Math.round(W * 1.9) : Math.round(Math.max(520, Math.min(innerHeight - 230, W * 0.62)));
+  const groups = d3.groups(list, d => d.l).map(([l, ch]) => ({layer: LAYER[l], children: ch}));
+  const root = d3.hierarchy({children: groups})
+    .sum(d => d.mc ? (state.size === "sqrt" ? Math.sqrt(d.mc) : d.mc) : 0)
+    .sort((a, b) => b.value - a.value);
+  d3.treemap().size([W, H]).tile(d3.treemapSquarify.ratio(1)).paddingOuter(2)
+    .paddingTop(d => d.depth === 1 ? 18 : 0).paddingInner(2).round(true)(root);
+  const svg = d3.select(host).append("svg").attr("width", W).attr("height", H)
+    .attr("role", "img").attr("aria-label", "Treemap of AI companies by market cap, grouped by value-chain layer");
+  const grp = svg.selectAll("g.grp").data(root.children).join("g").attr("class", "grp");
+  grp.append("rect").attr("class", "grp-bg").attr("x", d => d.x0).attr("y", d => d.y0)
+    .attr("width", d => d.x1 - d.x0).attr("height", d => d.y1 - d.y0);
+  grp.append("text").attr("class", "grp-label").attr("x", d => d.x0 + 4).attr("y", d => d.y0 + 13)
+    .text(d => fitText(`${d.data.layer.name.toUpperCase()} ${fmtCap(d3.sum(d.leaves(), l => l.data.mc))}`, d.x1 - d.x0 - 8, 10.5))
+    .on("click", (e, d) => setLayer(d.data.layer.id))
+    .append("title").text(d => `${d.data.layer.name}: click to ${state.layer ? "zoom out" : "zoom in"}`);
+  const tiles = svg.append("g").selectAll("g.tile").data(root.leaves()).join("g").attr("class", "tile")
+    .attr("transform", d => `translate(${d.x0},${d.y0})`)
+    .on("mouseenter", (e, d) => showTip(e, companyTip(d.data))).on("mousemove", moveTip).on("mouseleave", hideTip)
+    .on("click", (e, d) => openDrawer(d.data));
+  tiles.append("rect").attr("width", d => Math.max(0, d.x1 - d.x0)).attr("height", d => Math.max(0, d.y1 - d.y0))
+    .attr("rx", 2).attr("fill", d => retColor(d.data.r[state.period]));
+  tiles.each(function (d) {
+    const w = d.x1 - d.x0, h = d.y1 - d.y0, c = d.data;
+    if (w < 26 || h < 14) return;
+    const fill = retColor(c.r[state.period]), col = textOn(fill);
+    let fs = Math.min(34, h / 2.6, (w - 6) / (c.lab.length * 0.62));
+    let lab = c.lab;
+    if (fs < 9) { fs = Math.min(h / 1.8, 11); lab = fitText(c.lab, w - 4, fs); if (!lab || fs < 7.5) return; }
+    const g = d3.select(this);
+    const showRet = h >= fs * 2.35 && w >= 34;
+    const showCap = h >= fs * 3.6 && w >= 70;
+    const lines = 1 + showRet + showCap;
+    const y0 = h / 2 - (lines - 1) * fs * 0.5;
+    g.append("text").attr("x", w / 2).attr("y", y0).attr("dy", "0.35em").attr("text-anchor", "middle")
+      .attr("font-size", fs).attr("fill", col).text(lab);
+    if (showRet) g.append("text").attr("class", "ret").attr("x", w / 2).attr("y", y0 + fs * 0.95).attr("dy", "0.35em")
+      .attr("text-anchor", "middle").attr("font-size", Math.max(9, fs * 0.62)).attr("fill", col).text(fmtPct(c.r[state.period]));
+    if (showCap) g.append("text").attr("class", "ret").attr("x", w / 2).attr("y", y0 + fs * 1.75).attr("dy", "0.35em")
+      .attr("text-anchor", "middle").attr("font-size", Math.max(9, fs * 0.5)).attr("fill", col).attr("opacity", 0.85).text(fmtCap(c.mc));
+  });
+}
+
+// ---------- VALUE CHAIN ----------
+function regionLegend() {
+  return REGIONS.map(r => `<span class="item"><span class="sw" style="background:var(--s${r.slot})"></span>${r.name}</span>`).join("")
+    + `<span class="item" style="color:var(--muted)">bars = market-cap split by HQ region</span>`;
+}
+function regionBar(list) {
+  const tot = d3.sum(list, d => d.mc) || 1;
+  const by = d3.rollup(list, v => d3.sum(v, d => d.mc), d => d.reg);
+  return `<div class="rbar">${REGIONS.filter(r => by.get(r.id)).map(r =>
+    `<div data-tip="${esc(r.name)}: ${fmtCap(by.get(r.id))} (${(100 * by.get(r.id) / tot).toFixed(0)}%)" style="width:${100 * by.get(r.id) / tot}%;background:var(--s${r.slot})"></div>`).join("")}</div>`;
+}
+function bindDataTips(root) {
+  root.querySelectorAll("[data-tip]").forEach(el => {
+    el.onmouseenter = e => showTip(e, esc(el.dataset.tip)); el.onmousemove = moveTip; el.onmouseleave = hideTip;
+  });
+  root.querySelectorAll("[data-t]").forEach(el => { el.onclick = () => openDrawer(BY_T[el.dataset.t]); });
+}
+function renderChain() {
+  $("#chain-legend").innerHTML = regionLegend();
+  const list = filtered({layer: true});
+  const total = d3.sum(list, d => d.mc) || 1;
+  const html = DATA.layers.map((L, i) => {
+    const ls = list.filter(d => d.l === L.id);
+    if (!ls.length) return "";
+    const cap = d3.sum(ls, d => d.mc), r = capRet(ls, state.period);
+    const top = ls.slice().sort((a, b) => b.mc - a.mc).slice(0, 6);
+    return `<div class="card">
+      <div class="hd"><span class="num">${String(i + 1).padStart(2, "0")} ${i < DATA.layers.length - 1 ? "→" : ""}</span><span class="meta">${ls.length} companies</span></div>
+      <h3 data-layer="${L.id}">${esc(L.name)}</h3>
+      <div class="desc">${esc(L.desc)}</div>
+      <div><span class="big">${fmtCap(cap)}</span> <span class="meta">${(100 * cap / total).toFixed(1)}% of shown cap · ${PERIODS.find(p => p[0] === state.period)[1]} ${arrow(r)}${fmtPct(r)}</span></div>
+      ${regionBar(ls)}
+      <div class="top5">${top.map(d => `<span class="n" data-t="${esc(d.t)}">${esc(d.n)} <span style="color:var(--muted)">${esc(d.c)}</span></span><span class="c">${fmtCap(d.mc)}</span><span class="c">${fmtPct(d.r[state.period])}</span>`).join("")}</div>
+    </div>`;
+  }).join("");
+  const host = $("#chain");
+  host.innerHTML = html || `<p class="empty">No companies match these filters.</p>`;
+  host.querySelectorAll("h3[data-layer]").forEach(h => { h.onclick = () => setLayer(h.dataset.layer); });
+  bindDataTips(host);
+}
+
+// ---------- WORLD ----------
+const land = topojson.feature(WORLD, WORLD.objects.countries);
+land.features = land.features.filter(f => f.id !== "010");
+function renderWorld() {
+  const list = filtered({country: true});
+  const by = d3.rollups(list, v => ({mc: d3.sum(v, d => d.mc), n: v.length, list: v}), d => d.c)
+    .map(([c, o]) => ({c, ...o, ...DATA.countries[c]})).sort((a, b) => b.mc - a.mc);
+  const total = d3.sum(by, d => d.mc) || 1;
+  const host = $("#worldmap"); host.innerHTML = "";
+  const W = host.clientWidth - 12, H = Math.round(W * 0.52);
+  const proj = d3.geoNaturalEarth1().fitExtent([[4, 4], [W - 4, H - 4]], land);
+  const path = d3.geoPath(proj);
+  const svg = d3.select(host).append("svg").attr("width", W).attr("height", H).attr("role", "img")
+    .attr("aria-label", "World map: AI market cap by headquarters country");
+  svg.append("g").selectAll("path").data(land.features).join("path").attr("class", "land").attr("d", path);
+  const r = d3.scaleSqrt().domain([0, d3.max(by, d => d.mc) || 1]).range([0, Math.min(W, H) * 0.17]);
+  const g = svg.append("g").selectAll("g").data(by).join("g").attr("class", "bub")
+    .attr("transform", d => `translate(${proj([d.lon, d.lat])})`)
+    .on("mouseenter", (e, d) => showTip(e, countryTip(d, total))).on("mousemove", moveTip).on("mouseleave", hideTip)
+    .on("click", (e, d) => setCountry(d.c));
+  g.append("circle").attr("r", d => Math.max(3, r(d.mc))).attr("fill", TH.s1).attr("fill-opacity", 0.45)
+    .attr("stroke", d => state.country === d.c ? TH.ink : TH.surface).attr("stroke-width", d => state.country === d.c ? 2.5 : 2);
+  g.append("circle").attr("r", d => Math.max(14, r(d.mc))).attr("fill", "transparent");
+  const placed = [];
+  const hit = b => placed.some(o => b.x < o.x + o.w && b.x + b.w > o.x && b.y < o.y + o.h && b.y + b.h > o.y);
+  const labels = svg.append("g");
+  by.forEach(d => {
+    const [cx, cy] = proj([d.lon, d.lat]), rr = Math.max(3, r(d.mc));
+    if (rr < 7 && placed.length > 9) return;
+    const w = Math.max(d.name.length, 7) * 6.6, h = 26;
+    const spots = rr > 26 ? [[0, 0]] : [[rr + 4 + w / 2, 0], [0, rr + 4 + h / 2], [-(rr + 4 + w / 2), 0], [0, -(rr + 4 + h / 2)]];
+    for (const [dx, dy] of spots) {
+      const b = {x: cx + dx - w / 2, y: cy + dy - h / 2, w, h};
+      if (b.x < 0 || b.x + w > W || b.y < 0 || b.y + h > H || hit(b)) continue;
+      placed.push(b);
+      const t = labels.append("g").attr("transform", `translate(${cx + dx},${cy + dy})`);
+      t.append("text").attr("class", "bub-label").attr("text-anchor", "middle").attr("dy", "-0.15em").text(d.name);
+      t.append("text").attr("class", "bub-sub").attr("text-anchor", "middle").attr("dy", "1.05em").text(fmtCap(d.mc));
+      break;
+    }
+  });
+  const max = by[0] ? by[0].mc : 1;
+  $("#rank").innerHTML = `<h3>AI market cap by HQ country</h3>
+    <div class="r" style="cursor:default;color:var(--muted);font-size:11px"><span>Country</span><span>Share of shown cap</span><span class="v">Cap</span><span class="c">${PERIODS.find(p => p[0] === state.period)[1]}</span></div>
+    ${by.map(d => `<div class="r ${state.country === d.c ? "sel" : ""}" data-c="${d.c}"><span>${esc(d.name)} <span style="color:var(--muted)">${d.n}</span></span>
+      <span style="display:flex;align-items:center;gap:6px"><span class="bar" style="width:${Math.max(0.5, 100 * d.mc / max)}%"></span><span style="color:var(--ink2);font-size:11.5px">${(100 * d.mc / total).toFixed(1)}%</span></span>
+      <span class="v">${fmtCap(d.mc)}</span><span class="c">${fmtPct(capRet(d.list, state.period))}</span></div>`).join("")}`;
+  $("#rank").querySelectorAll("[data-c]").forEach(el => { el.onclick = () => setCountry(el.dataset.c); });
+}
+function countryTip(d, total) {
+  const top = d.list.slice().sort((a, b) => b.mc - a.mc).slice(0, 6);
+  return `<b>${esc(d.name)}</b> <span class="m">${REGION[d.region].name}</span><br>
+    ${fmtCap(d.mc)} · ${(100 * d.mc / total).toFixed(1)}% of shown AI cap · ${d.n} companies<br>
+    <span class="m">Cap-weighted ${PERIODS.find(p => p[0] === state.period)[1]}: ${fmtPct(capRet(d.list, state.period))}</span>
+    <div style="margin-top:6px">${top.map(c => `${esc(c.n)} <span class="m">${fmtCap(c.mc)}</span>`).join("<br>")}</div>
+    <div class="m" style="margin-top:6px">Click to filter every view to ${esc(d.name)}</div>`;
+}
+
+// ---------- NEW & UPCOMING ----------
+function renderIpo() {
+  const recent = C.filter(d => d.listed).sort((a, b) => b.listed.localeCompare(a.listed));
+  const p = state.period, pl = PERIODS.find(x => x[0] === p)[1];
+  $("#ipo").innerHTML = `
+    <div class="card panel"><h3>Pipeline: AI companies heading to market</h3><div class="note">Filed, approved or publicly planned listings as of ${esc(DATA.asof.slice(0, 10))}. Status comes from the linked reporting.</div>
+    <div class="tbl-wrap" style="border:0"><table class="t"><tr><th>Company</th><th>Proposed ticker</th><th>HQ</th><th>Layer</th><th>Status</th><th>Timing</th><th>Source</th></tr>
+    ${DATA.pipeline.map(r => `<tr><td><b>${esc(r.name)}</b></td><td>${esc(r.proposed_ticker)}</td><td>${esc(DATA.countries[r.country]?.name || r.country)}</td><td>${esc(LAYER[r.layer].name)}</td>
+      <td class="wrapc">${esc(r.status)}</td><td>${esc(r.expected)}</td><td><a href="${esc(r.source)}" target="_blank" rel="noopener">${esc(new URL(r.source).hostname.replace("www.", ""))}</a></td></tr>`).join("")}</table></div></div>
+    <div class="card panel" style="margin-top:12px"><h3>Listed since 2025 (${recent.length})</h3><div class="note">New AI listings in the universe, newest first. "Since listing" runs from the first close Yahoo has (shown for listings in the last ~13 months). Click a row for details.</div>
+    <div class="tbl-wrap" style="border:0"><table class="t"><tr><th>Listed</th><th>Company</th><th>Ticker</th><th>HQ</th><th>Layer</th><th class="num">Mkt cap</th><th class="num">Since listing</th><th class="num">${pl}</th><th>What it does</th></tr>
+    ${recent.map(d => `<tr class="row" data-t="${esc(d.t)}"><td>${esc(d.listed)}</td><td><b>${esc(d.n)}</b></td><td>${esc(d.t)}</td><td>${esc(d.cn)}</td><td>${esc(LAYER[d.l].name)}</td>
+      <td class="num">${fmtCap(d.mc)}</td><td class="num">${d.r.ipo != null ? fmtPct(d.r.ipo) : '<span style="color:var(--muted)">n/a</span>'}</td><td class="num">${fmtPct(d.r[p])}</td><td class="wrapc">${esc(d.note)}</td></tr>`).join("")}</table></div></div>`;
+  $("#ipo").querySelectorAll("tr.row").forEach(tr => { tr.onclick = () => openDrawer(BY_T[tr.dataset.t]); });
+}
+
+// ---------- TABLE ----------
+const COLS = [
+  ["rank", "#", d => 0, "num"], ["n", "Company", d => d.n], ["t", "Ticker", d => d.t], ["cn", "HQ", d => d.cn],
+  ["l", "Layer", d => LAYER[d.l].i], ["s", "Segment", d => d.s], ["tier", "AI exposure", d => ({core: 0, high: 1, partial: 2})[d.tier]],
+  ["mc", "Mkt cap", d => d.mc, "num"], ...PERIODS.map(([k, l]) => [k, l, d => d.r[k], "num"]),
+];
+function renderTable() {
+  const list = filtered();
+  const col = COLS.find(c => c[0] === state.sort.k) || COLS[7];
+  const dir = state.sort.d;
+  list.sort((a, b) => {
+    const x = col[2](a), y = col[2](b);
+    if (x == null && y == null) return 0; if (x == null) return 1; if (y == null) return -1;
+    return (typeof x === "string" ? x.localeCompare(y) : x - y) * dir;
+  });
+  const sw = r => `<span class="mk" style="background:${retColor(r)}"></span>`;
+  $("#table").innerHTML = `<thead><tr>${COLS.map(([k, l, , cls]) => `<th class="${cls || ""}" data-k="${k}">${l}${state.sort.k === k ? (dir < 0 ? " ↓" : " ↑") : ""}</th>`).join("")}</tr></thead>
+    <tbody>${list.map((d, i) => `<tr class="row" data-t="${esc(d.t)}"><td class="num" style="color:var(--muted)">${i + 1}</td><td><b>${esc(d.n)}</b></td><td>${esc(d.t)}</td><td>${esc(d.cn)}</td>
+      <td>${esc(LAYER[d.l].name)}</td><td>${esc(d.s)}</td><td>${TIER_NAME[d.tier]}</td><td class="num">${fmtCap(d.mc)}</td>
+      ${PERIODS.map(([k]) => `<td class="num">${k === state.period ? sw(d.r[k]) : ""}${fmtPct(d.r[k])}</td>`).join("")}</tr>`).join("")}</tbody>`;
+  $("#table").querySelectorAll("th").forEach(th => { th.onclick = () => {
+    const k = th.dataset.k; if (k === "rank") return;
+    state.sort = {k, d: state.sort.k === k ? -state.sort.d : (["n", "t", "cn", "s", "l", "tier"].includes(k) ? 1 : -1)}; renderTable(); }; });
+  $("#table").querySelectorAll("tr.row").forEach(tr => { tr.onclick = () => openDrawer(BY_T[tr.dataset.t]); });
+}
+
+// ---------- ABOUT ----------
+function renderAbout() {
+  const tiers = d3.rollup(C, v => v.length, d => d.tier);
+  $("#about").innerHTML = `
+    <h3>What this is</h3><p>A map of the listed AI industry worldwide: ${C.length} public companies whose business is driven by AI demand, grouped into ${DATA.layers.length} layers of the value chain, from the tools chips are made with to the robots and apps at the other end. Each company sits in one primary layer, so Samsung is under memory even though it is also a foundry and a phone maker.</p>
+    <h3>AI-exposure tiers (editorial)</h3><ul>
+      <li><b>Core</b> (${tiers.get("core") || 0}): AI is the main reason the business exists or is growing (NVIDIA, SK hynix, CoreWeave, Vertiv).</li>
+      <li><b>High</b> (${tiers.get("high") || 0}): AI is a major driver next to other big businesses (TSMC's neighbours in equipment, Amazon, Delta Electronics).</li>
+      <li><b>Partial</b> (${tiers.get("partial") || 0}): AI is meaningful but a minority of the story (Apple, Cisco, IT-services firms).</li></ul>
+    <h3>Data</h3><ul>
+      <li>Prices, market caps and history come from ${esc(DATA.source)}, pulled ${esc(DATA.asof)}. Market caps are converted to USD at spot FX: ${Object.entries(DATA.fx).filter(([k]) => k !== "USD").map(([k, v]) => `${k} ${v.toPrecision(4)}`).join(", ")}.</li>
+      <li>Returns use split- and dividend-adjusted closes in local currency. YTD runs from the last close of the previous year. Cap-weighted returns weight each company by its starting market cap. Companies without enough history show "—".</li>
+      <li>Universe changes since 2025 (new IPOs, mergers, delistings) were checked against news reporting on ${esc(DATA.asof.slice(0, 10))}. Recent removals: Juniper (now HPE), Ansys (Synopsys), Alphawave (Qualcomm), Confluent (IBM), CyberArk (Palo Alto), Informatica (Salesforce), Shinko Electric (taken private). Pure Storage now trades as Everpure (P).</li>
+      ${DATA.missing.length ? `<li>No market data for: ${DATA.missing.map(m => esc(m.t)).join(", ")}.</li>` : ""}
+      ${DATA.stale.length ? `<li>Stale quotes (no trade in 7+ days): ${DATA.stale.map(m => esc(m.ticker)).join(", ")}.</li>` : ""}
+    </ul>
+    <h3>Updates</h3><p>Prices refresh about every hour, around the clock on weekdays, so Asian, European and US sessions are all covered. The universe and the IPO pipeline are curated by hand. <a href="https://github.com/luckeyfaraday/ai-stock-atlas" target="_blank" rel="noopener">Source and data on GitHub</a>; corrections and additions welcome as issues.</p>
+    <h3>Not investment advice</h3><p>This is a map, not a recommendation. Tier and layer assignments are judgement calls.</p>`;
+}
+
+// ---------- DRAWER ----------
+function openDrawer(d) {
+  hideTip();
+  const dr = $("#drawer");
+  const peers = C.filter(x => x.l === d.l && x.s === d.s && x.t !== d.t).sort((a, b) => b.mc - a.mc).slice(0, 6);
+  dr.innerHTML = `<button class="x" aria-label="Close">✕</button>
+    <h2>${esc(d.n)}</h2><div class="m">${esc(d.t)} · ${esc(d.ex || "")} · ${esc(d.cn)}</div>
+    <p style="margin:10px 0 0">${esc(d.note)}</p>
+    <div class="kv"><span>Layer</span><span>${esc(LAYER[d.l].name)} › ${esc(d.s)}</span>
+      <span>AI exposure</span><span>${TIER_NAME[d.tier]}</span>
+      <span>Market cap</span><span>${fmtCap(d.mc)}</span>
+      <span>Last price</span><span>${d.p.toLocaleString(undefined, {maximumFractionDigits: 2})} ${esc(d.cur)} <span style="color:var(--muted)">(${esc(d.lb)})</span></span>
+      ${d.listed ? `<span>Listed</span><span>${esc(d.listed)}</span>` : ""}
+</div>
+    <div class="rets">${PERIODS.map(([k, l]) => `<div><div class="k">${l}</div><div class="v">${fmtPct(d.r[k])}</div></div>`).join("")}</div>
+    <div class="spark-wrap" id="spark"></div><div class="spark-read" id="spark-read">Weekly close, ${d.ipo ? "since listing" : "last 12 months"} (${esc(d.cur)}) · hover to read</div>
+    ${peers.length ? `<h3 style="font-size:13px;margin:16px 0 6px">Peers in ${esc(d.s)}</h3><div class="top5">${peers.map(x => `<span class="n" data-t="${esc(x.t)}">${esc(x.n)} <span style="color:var(--muted)">${esc(x.c)}</span></span><span class="c">${fmtCap(x.mc)}</span><span class="c">${fmtPct(x.r[state.period])}</span>`).join("")}</div>` : ""}
+    <p style="margin-top:16px"><a href="https://finance.yahoo.com/quote/${encodeURIComponent(d.t)}" target="_blank" rel="noopener">Open on Yahoo Finance ↗</a></p>`;
+  dr.classList.add("open");
+  dr.querySelector(".x").onclick = () => dr.classList.remove("open");
+  bindDataTips(dr);
+  drawSpark(d);
+}
+document.addEventListener("keydown", e => { if (e.key === "Escape") $("#drawer").classList.remove("open"); });
+function drawSpark(d) {
+  const host = $("#spark"), vals = d.sp;
+  if (!vals || vals.length < 2) { host.innerHTML = `<p class="m">Not enough history yet.</p>`; return; }
+  const W = 340, H = 120, m = {l: 4, r: 4, t: 8, b: 8};
+  const last = new Date(d.lb + "T00:00:00Z");
+  const dates = vals.map((_, i) => new Date(last - (vals.length - 1 - i) * 7 * 864e5));
+  const x = d3.scaleLinear().domain([0, vals.length - 1]).range([m.l, W - m.r]);
+  const y = d3.scaleLinear().domain(d3.extent(vals)).nice().range([H - m.b, m.t]);
+  const svg = d3.select(host).append("svg").attr("width", W).attr("height", H);
+  svg.append("line").attr("x1", m.l).attr("x2", W - m.r).attr("y1", y(vals[0])).attr("y2", y(vals[0])).attr("stroke", TH.axis).attr("stroke-width", 1);
+  svg.append("path").attr("d", d3.line().x((v, i) => x(i)).y(v => y(v))(vals)).attr("fill", "none").attr("stroke", TH.s1).attr("stroke-width", 2).attr("stroke-linejoin", "round");
+  const cross = svg.append("line").attr("y1", m.t).attr("y2", H - m.b).attr("stroke", TH.muted).attr("opacity", 0);
+  const dot = svg.append("circle").attr("r", 4).attr("fill", TH.s1).attr("stroke", TH.surface).attr("stroke-width", 2).attr("opacity", 0);
+  const read = $("#spark-read"), base = read.textContent;
+  svg.append("rect").attr("width", W).attr("height", H).attr("fill", "transparent")
+    .on("mousemove", e => {
+      const i = Math.max(0, Math.min(vals.length - 1, Math.round(x.invert(d3.pointer(e)[0]))));
+      cross.attr("x1", x(i)).attr("x2", x(i)).attr("opacity", 1); dot.attr("cx", x(i)).attr("cy", y(vals[i])).attr("opacity", 1);
+      read.textContent = `Week of ${dates[i].toISOString().slice(0, 10)}: ${vals[i].toLocaleString(undefined, {maximumFractionDigits: 2})} ${d.cur} · ${fmtPct((vals[vals.length - 1] / vals[i] - 1) * 100)} since`;
+    })
+    .on("mouseleave", () => { cross.attr("opacity", 0); dot.attr("opacity", 0); read.textContent = base; });
+}
+
+// ---------- boot ----------
+function renderAll() {
+  renderControls(); renderHeader();
+  document.documentElement.style.setProperty("--fh", $(".filters").offsetHeight + "px");
+  ({map: renderMap, chain: renderChain, world: renderWorld, ipo: renderIpo, table: renderTable, about: renderAbout})[state.view]();
+}
+let rT; addEventListener("resize", () => { clearTimeout(rT); rT = setTimeout(renderAll, 150); });
+window.ATLAS_DEBUG = {state, renderAll, set: o => { Object.assign(state, o); renderAll(); }, openDrawer: t => openDrawer(BY_T[t])};
+applyTheme();
+renderAll();
+</script>
+</body>
+</html>
